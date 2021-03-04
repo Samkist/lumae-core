@@ -1,0 +1,7 @@
+name: Lumae
+version: @version@
+main: net.lumae.lumae.Lumae
+api-version: 1.16
+authors: [ Samkist, tekkifygamer, Knight ]
+description: Proprietary Code Base for Lumae
+website: https://lumae.net/
