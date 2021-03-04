@@ -1,5 +1,6 @@
 # User-specific stuff
 .gradle/
+gradle/
 .idea/
 build/
 gradle.properties
