@@ -1,0 +1,7 @@
+lumae:
+  database:
+    user: ""
+    name: ""
+    password: ""
+    host: ""
+    port: ""
