@@ -1,8 +1,10 @@
 plugins {
     id "io.freefair.lombok" version "5.3.0"
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
 apply plugin: 'java'
+apply plugin: 'maven'
 
 
 group = 'net.lumae'
@@ -10,6 +12,12 @@ version = '1.0-SNAPSHOT'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+//6.8.3
 
 repositories {
     mavenCentral()
@@ -28,14 +36,10 @@ repositories {
 dependencies {
     compileOnly 'com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT'
     compileOnly group: 'com.comphenix.protocol', name: 'ProtocolLib', version: '4.6.0'
-    implementation 'com.google.code.gson:gson:2.8.6'
-    compile 'org.mongodb:mongodb-driver-sync:4.2.2'
+    implementation 'org.mongodb:mongodb-driver-sync:4.2.2'
 }
 
-/*
-plugins {
-    id 'org.spongepowered.plugin' version '0.9.0'
-    id "io.freefair.lombok" version "5.3.0"
+shadowJar {
+    minimize()
+    baseName "LumaeLib"
 }
-
-sponge.plugin.id = 'chat'*/

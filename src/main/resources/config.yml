@@ -1,7 +1,8 @@
 lumae:
   database:
     user: ""
-    name: ""
+    name: "" # NEEDS DB NAME
     password: ""
     host: ""
     port: ""
+    connectionString: ""
