@@ -3,6 +3,7 @@ package net.lumae.LumaeCore.storage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.bson.codecs.pojo.annotations.BsonDiscriminator;
+import org.bson.types.Decimal128;
 import org.bukkit.Location;
 
 import java.math.BigDecimal;
@@ -13,7 +14,7 @@ import java.util.Map;
 @BsonDiscriminator
 public abstract class PlayerData {
 
-	private BigDecimal balance;
+	private Decimal128 balance;
 	private Double lumiumBalance;
 	private Integer votes;
 	private Integer playerKills;
