@@ -161,7 +161,7 @@ public class DBManager {
 	@NonNull
 	public void initializeChatFormats(ChatFormat chatFormats) {
 		if(!init) return;
-		val query = datastore.find("ChatFormats", ChatFormat.class).first();
+		val query = datastore.find("chatFormats", ChatFormat.class).first();
 		if(Objects.isNull(query)) {
 			datastore.save(chatFormats);
 		}
@@ -169,7 +169,7 @@ public class DBManager {
 
 	public List<ChatFormat> loadChatFormats() {
 		if(!init) return new ArrayList<>();
-		val query = datastore.find("ChatFormats", ChatFormat.class).first();
+		val query = datastore.find("chatFormats", ChatFormat.class).first();
 		if(Objects.nonNull(query)) {
 			return datastore.find(ChatFormat.class)
 					.iterator().toList();

@@ -1,22 +1,11 @@
 package net.lumae.LumaeCore.storage;
 
-import dev.morphia.annotations.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import dev.morphia.annotations.Entity;
 
-@Data
-@AllArgsConstructor
-@Entity(value = "ChatFormats", useDiscriminator = false)
-public class ChatFormat {
+@Entity(value = "chatFormats", useDiscriminator = false)
+public class ChatFormat extends Format {
 
-	@Id
-	String name;
-	String permission;
-	String messageFormat;
-	Integer priority;
-
-	public ChatFormat() {
-
+	public ChatFormat(String name, String permission, String messageFormat, Integer priority) {
+		super(name, permission, messageFormat, priority);
 	}
-
 }
