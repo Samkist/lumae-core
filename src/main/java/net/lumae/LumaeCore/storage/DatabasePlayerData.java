@@ -1,5 +1,7 @@
 package net.lumae.LumaeCore.storage;
 
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
 import lombok.Getter;
 import lombok.Setter;
 import org.bson.types.Decimal128;
@@ -10,8 +12,10 @@ import java.util.*;
 
 @Setter
 @Getter
+@Entity(value = "playerData", useDiscriminator = false)
 public class DatabasePlayerData extends PlayerData {
 
+	@Id
 	private String uuid;
 
 	public DatabasePlayerData(Player player, Decimal128 balance, Double lumiumBalance,

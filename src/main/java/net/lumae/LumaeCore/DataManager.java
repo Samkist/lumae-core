@@ -9,23 +9,19 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
+@Getter
 public class DataManager {
 
 	private final FileManager fileManager;
 	private final DBManager dbManager;
-	@Getter
 	private final Map<UUID, PlayerData> playerDataMap;
+	private final List<ChatFormat> chatFormats;
 
 	public DataManager(FileManager fileManager, DBManager dbManager) {
 		this.fileManager = fileManager;
 		this.dbManager = dbManager;
 		this.playerDataMap = new HashMap<>();
-		initialize();
-	}
-
-	private void initialize() {
-		dbManager.initializeChatFormats(new ChatFormat("default", "lumae.chat.default",
-				"%luckperms_prefix% %player_displayname% &8»&7 %lumae_message%", 99999));
+		this.chatFormats = loadChatFormats();
 	}
 
 	public @NonNull Optional<BulkWriteResult> saveAllPlayers(Map<UUID, PlayerData> playerData) {

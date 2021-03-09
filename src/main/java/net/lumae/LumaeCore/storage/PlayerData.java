@@ -11,7 +11,6 @@ import java.util.Map;
 
 @Data
 @AllArgsConstructor
-@BsonDiscriminator
 public abstract class PlayerData {
 
 	private Decimal128 balance;

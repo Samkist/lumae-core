@@ -15,10 +15,7 @@ import dev.morphia.*;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import net.lumae.LumaeCore.storage.ChatFormat;
-import net.lumae.LumaeCore.storage.Cooldown;
-import net.lumae.LumaeCore.storage.DatabasePlayerData;
-import net.lumae.LumaeCore.storage.PlayerData;
+import net.lumae.LumaeCore.storage.*;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -164,22 +161,42 @@ public class DBManager {
 	@NonNull
 	public void initializeChatFormats(ChatFormat chatFormats) {
 		if(!init) return;
-		if(Objects.isNull(datastore.find("ChatFormats", ChatFormat.class).first())) {
+		val query = datastore.find("ChatFormats", ChatFormat.class).first();
+		if(Objects.isNull(query)) {
 			datastore.save(chatFormats);
 		}
 	}
 
 	public List<ChatFormat> loadChatFormats() {
 		if(!init) return new ArrayList<>();
-		if(Objects.nonNull(datastore.find("ChatFormats", ChatFormat.class).first())) {
-			datastore.find(ChatFormat.class)
-					.iterator().toList().forEach(System.out::println);
+		val query = datastore.find("ChatFormats", ChatFormat.class).first();
+		if(Objects.nonNull(query)) {
 			return datastore.find(ChatFormat.class)
 					.iterator().toList();
 		} else {
-			return new ArrayList<>();
+			initializeChatFormats(new ChatFormat("default", "lumae.chat.default",
+					"%luckperms_prefix% %player_displayname% &8»&7 %lumae_message%", 99999));
+			return loadChatFormats();
 		}
+	}
 
+	public void initializeMessages(List<Message> messages) {
+		if(!init) return;
+		val query = datastore.find("messages", Message.class).first();
+		if(Objects.nonNull(query)) {
+			datastore.save(messages);
+		}
+	}
 
+	public List<Message> loadMessages() {
+		if(!init) return new ArrayList<>();
+		val query = datastore.find("messages", Message.class).first();
+		if(Objects.nonNull(query)) {
+			return datastore.find(Message.class).iterator().toList();
+		} else {
+			//initialize message code then
+			//return loadMessages();
+		}
+		return new ArrayList<>();
 	}
 }

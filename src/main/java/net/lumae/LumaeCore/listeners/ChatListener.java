@@ -27,16 +27,15 @@ public class ChatListener implements Listener {
 	private final List<ChatFormat> chatFormats;
 
 	public ChatListener() {
-		chatFormats = plugin.getDataManager().loadChatFormats();
+		chatFormats = plugin.getDataManager().getChatFormats();
 	}
 
 	@EventHandler
 	public void chatEvent(AsyncChatEvent event) {
 		val player = event.getPlayer();
-		val format = chatFormats.stream().filter(f -> {
-			log.info("Checking against " + f.getPermission() + " : " + f.getMessageFormat());
-			return player.hasPermission(f.getPermission());
-		}).min(Comparator.comparing(ChatFormat::getPriority)).get();
+		val format = chatFormats.stream().filter(f ->
+				player.hasPermission(f.getPermission()))
+				.min(Comparator.comparing(ChatFormat::getPriority)).get();
 		val chatFormat = new ChatFormatter() {
 			@Override
 			public @NotNull Component chat(@NotNull Component displayName, @NotNull Component msg) {
