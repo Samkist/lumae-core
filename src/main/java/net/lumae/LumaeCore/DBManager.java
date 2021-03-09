@@ -11,10 +11,15 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.ReplaceOneModel;
 import com.mongodb.client.model.WriteModel;
+import dev.morphia.*;
+import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
+import net.lumae.LumaeCore.storage.ChatFormat;
 import net.lumae.LumaeCore.storage.Cooldown;
 import net.lumae.LumaeCore.storage.DatabasePlayerData;
 import net.lumae.LumaeCore.storage.PlayerData;
+import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
@@ -22,7 +27,6 @@ import org.bson.types.Decimal128;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,6 +44,7 @@ public class DBManager {
 	private MongoCollection<DatabasePlayerData> playerDataCollection;
 	private boolean init;
 	private String connectionString;
+	private Datastore datastore;
 	//PLAIN OLD JAVA OBJECTS
 	private final CodecRegistry codecRegistry = org.bson.codecs.configuration.CodecRegistries.fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), org.bson.codecs.configuration.CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
 
@@ -78,43 +83,67 @@ public class DBManager {
 							.build());
 		}
 		db = mongoClient.getDatabase(database);
+		datastore = Morphia.createDatastore(mongoClient, database);
 		playerDataCollection = db.getCollection("playerData", DatabasePlayerData.class);
 		init = true;
 	}
 
-	public void saveAllPlayers(Map<Player, PlayerData> playerData) {
-		if(!init) return;
+	@NonNull
+	public Optional<BulkWriteResult> saveAllPlayers(Map<UUID, PlayerData> playerData) {
+		if(!init) return Optional.empty();
 		List<DatabasePlayerData> playerDataList = playerData.entrySet().stream().map(e -> new DatabasePlayerData(e.getKey(), e.getValue())).collect(Collectors.toList());
 		List<WriteModel<DatabasePlayerData>> writes = new ArrayList<>();
 		playerDataList.forEach(d -> writes.add(
 				new ReplaceOneModel<>(eq("uuid", d.getUuid()), d)
 		));
-		BulkWriteResult bulkWriteResult = playerDataCollection.bulkWrite(writes);
-
+		return Optional.ofNullable(playerDataCollection.bulkWrite(writes));
 	}
 
+	@NonNull
+	@SneakyThrows
 	public void savePlayerData(Player player, PlayerData playerData) {
 		if(!init) return;
-		playerDataCollection.findOneAndReplace(byUUIDField(player), new DatabasePlayerData(player, playerData));
+		val playerDataCollection = db.getCollection("playerData");
+		val data = new DatabasePlayerData(player, playerData);
+		Document query = new Document();
+		query.put("uuid", player.getUniqueId().toString());
+		query.put("balance", data.getBalance());
+		query.put("lumiumBalance", data.getLumiumBalance());
+		query.put("votes", data.getVotes());
+		query.put("playerKills", data.getPlayerKills());
+		query.put("deaths", data.getDeaths());
+		query.put("mobKills", data.getMobKills());
+		query.put("blocksMined", data.getBlocksMined());
+		query.put("secondsPlayed", data.getSecondsPlayed());
+		query.put("chatColor", data.getChatColor());
+		query.put("currentName", data.getCurrentName());
+		query.put("homes", playerData.getHomes());
+		query.put("kitCooldowns", playerData.getKitCooldowns());
+		query.put("joinDate", playerData.getJoinDate());
+		playerDataCollection.findOneAndReplace(byUUIDField(player), query);
 	}
 
+	@NonNull
 	public void initializePlayerData(Player player, PlayerData playerData) {
 		if(!init) return;
-		playerDataCollection.insertOne(new DatabasePlayerData(player,playerData));
+		playerDataCollection.insertOne(new DatabasePlayerData(player, playerData));
 	}
 
+	@NonNull
 	public String topPlayerByField(String field) {
 		return playerDataCollection.find().sort(eq(field, -1)).limit(1).first().getCurrentName();
 	}
 
+	@NonNull
 	public Optional<PlayerData> loadPlayerData(Player player) {
 		if(!init) return Optional.empty();
-		val playerDataCollection = db.getCollection("playerdata");
+		val playerDataCollection = db.getCollection("playerData");
 		val playerData = playerDataCollection.find(eq("uuid", player.getUniqueId().toString())).first();
-		Decimal128 balance = new Decimal128(0);
+		if(Objects.isNull(playerData)) return Optional.empty();
+		Decimal128 balance = playerData.get("balance", Decimal128.class);
 		Double lumiumBalance = playerData.getDouble("lumiumBalance");
 		Integer votes = playerData.getInteger("votes");
-		Integer playerKills = playerData.getInteger("votes");
+		Integer playerKills = playerData.getInteger("playerKills");
 		Integer deaths = playerData.getInteger("deaths");
 		Integer mobKills = playerData.getInteger("mobKills");
 		Integer blocksMined = playerData.getInteger("blocksMined");
@@ -122,12 +151,35 @@ public class DBManager {
 		String chatColor = playerData.getString("chatColor");
 		String currentName = playerData.getString("currentName");
 		Map<String, Location> homes = playerData.get("homes", Map.class);
-		Map<String, Cooldown> kitCooldowns = playerData.get("homes", Map.class);
+		Map<String, Cooldown> kitCooldowns = playerData.get("kitCooldowns", Map.class);
+		Date joinDate = playerData.getDate("joinDate");
 		return Optional.of(new DatabasePlayerData(player, balance, lumiumBalance, votes, playerKills,
-				deaths, mobKills, blocksMined, secondsPlayed, chatColor, currentName, homes, kitCooldowns));
+				deaths, mobKills, blocksMined, secondsPlayed, chatColor, currentName, homes, kitCooldowns, joinDate));
 	}
 
 	private Bson byUUIDField(Player player) {
 		return eq("uuid",  player.getUniqueId().toString());
+	}
+
+	@NonNull
+	public void initializeChatFormats(ChatFormat chatFormats) {
+		if(!init) return;
+		if(Objects.isNull(datastore.find("ChatFormats", ChatFormat.class).first())) {
+			datastore.save(chatFormats);
+		}
+	}
+
+	public List<ChatFormat> loadChatFormats() {
+		if(!init) return new ArrayList<>();
+		if(Objects.nonNull(datastore.find("ChatFormats", ChatFormat.class).first())) {
+			datastore.find(ChatFormat.class)
+					.iterator().toList().forEach(System.out::println);
+			return datastore.find(ChatFormat.class)
+					.iterator().toList();
+		} else {
+			return new ArrayList<>();
+		}
+
+
 	}
 }

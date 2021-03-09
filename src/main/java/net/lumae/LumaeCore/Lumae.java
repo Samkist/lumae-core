@@ -3,7 +3,11 @@ package net.lumae.LumaeCore;
 import com.mongodb.MongoCredential;
 import lombok.Getter;
 import lombok.val;
+import net.lumae.LumaeCore.listeners.ChatListener;
+import net.lumae.LumaeCore.listeners.JoinLeaveListener;
 import net.lumae.LumaeCore.listeners.PlayerDataListener;
+import net.lumae.LumaeCore.tasks.PlayerDataTask;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
@@ -13,6 +17,8 @@ import java.util.Objects;
 public final class Lumae extends JavaPlugin {
 
 	private final FileManager fileManager = new FileManager(this);
+	@Getter
+	private static final long LAST_START_TIME = System.currentTimeMillis();
 	private DBManager dbManager;
 	private DataManager dataManager;
 
@@ -27,9 +33,19 @@ public final class Lumae extends JavaPlugin {
 
 		dataManager = new DataManager(fileManager, dbManager);
 
+		/*
+		TASKS
+		 */
+		val playerDataTask = new PlayerDataTask();
+		val playerDataTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this, playerDataTask,6000L, 6000L);
+
 		val playerDataListener = new PlayerDataListener(this, dataManager.getPlayerDataMap(), dataManager);
 
-		Arrays.asList(playerDataListener)
+		val joinLeaveListener = new JoinLeaveListener();
+
+		val chatListener = new ChatListener();
+
+		Arrays.asList(playerDataListener, joinLeaveListener, chatListener)
 				.forEach(listener -> getServer().getPluginManager().registerEvents(listener, this));
 
 	}
@@ -45,7 +61,7 @@ public final class Lumae extends JavaPlugin {
 		val connectionString = configYml.getString("lumae.database.connectionString");
 		val database = configYml.getString("lumae.database.name");
 		if(Objects.nonNull(connectionString)) {
-			dbManager = new DBManager(this, connectionString,database);
+			dbManager = new DBManager(this, connectionString, database);
 		} else {
 			String user = configYml.getString("lumae.database.user");
 			String password = configYml.getString("lumae.database.password");

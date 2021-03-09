@@ -6,7 +6,7 @@ import org.bson.codecs.pojo.annotations.BsonDiscriminator;
 import org.bson.types.Decimal128;
 import org.bukkit.Location;
 
-import java.math.BigDecimal;
+import java.util.Date;
 import java.util.Map;
 
 @Data
@@ -26,5 +26,6 @@ public abstract class PlayerData {
 	private String currentName;
 	private Map<String, Location> homes;
 	private Map<String, Cooldown> kitCooldowns;
+	private Date joinDate;
 
 }
