@@ -7,25 +7,25 @@ import com.mongodb.ServerAddress;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.ReplaceOneModel;
-import com.mongodb.client.model.WriteModel;
-import dev.morphia.*;
+import dev.morphia.Datastore;
+import dev.morphia.Morphia;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperator;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import net.lumae.LumaeCore.storage.*;
-import org.bson.Document;
+import net.lumae.LumaeCore.storage.ChatFormat;
+import net.lumae.LumaeCore.storage.Message;
+import net.lumae.LumaeCore.storage.PlayerData;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
 import org.bson.types.Decimal128;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -38,7 +38,6 @@ public class DBManager {
 	private final Integer port;
 	private MongoClient mongoClient;
 	private MongoDatabase db;
-	private MongoCollection<DatabasePlayerData> playerDataCollection;
 	private boolean init;
 	private String connectionString;
 	private Datastore datastore;
@@ -81,77 +80,66 @@ public class DBManager {
 		}
 		db = mongoClient.getDatabase(database);
 		datastore = Morphia.createDatastore(mongoClient, database);
-		playerDataCollection = db.getCollection("playerData", DatabasePlayerData.class);
 		init = true;
 	}
 
 	@NonNull
 	public Optional<BulkWriteResult> saveAllPlayers(Map<UUID, PlayerData> playerData) {
-		if(!init) return Optional.empty();
-		List<DatabasePlayerData> playerDataList = playerData.entrySet().stream().map(e -> new DatabasePlayerData(e.getKey(), e.getValue())).collect(Collectors.toList());
-		List<WriteModel<DatabasePlayerData>> writes = new ArrayList<>();
-		playerDataList.forEach(d -> writes.add(
-				new ReplaceOneModel<>(eq("uuid", d.getUuid()), d)
-		));
-		return Optional.ofNullable(playerDataCollection.bulkWrite(writes));
+		return Optional.empty();
 	}
 
 	@NonNull
 	@SneakyThrows
 	public void savePlayerData(Player player, PlayerData playerData) {
 		if(!init) return;
-		val playerDataCollection = db.getCollection("playerData");
-		val data = new DatabasePlayerData(player, playerData);
-		Document query = new Document();
-		query.put("uuid", player.getUniqueId().toString());
-		query.put("balance", data.getBalance());
-		query.put("lumiumBalance", data.getLumiumBalance());
-		query.put("votes", data.getVotes());
-		query.put("playerKills", data.getPlayerKills());
-		query.put("deaths", data.getDeaths());
-		query.put("mobKills", data.getMobKills());
-		query.put("blocksMined", data.getBlocksMined());
-		query.put("secondsPlayed", data.getSecondsPlayed());
-		query.put("chatColor", data.getChatColor());
-		query.put("currentName", data.getCurrentName());
-		query.put("homes", playerData.getHomes());
-		query.put("kitCooldowns", playerData.getKitCooldowns());
-		query.put("joinDate", playerData.getJoinDate());
-		playerDataCollection.findOneAndReplace(byUUIDField(player), query);
+
+		val query = datastore.find(PlayerData.class).filter(Filters.eq("uuid",player.getUniqueId().toString()));
+
+		ArrayList<UpdateOperator> updateOperators = new ArrayList<>();
+		val playerUpdate = UpdateOperators.set("player", player);
+		updateOperators.add(UpdateOperators.set("chatFormat", playerData.getChatFormat()));
+		updateOperators.add(UpdateOperators.set("balance", playerData.getBalance()));
+		updateOperators.add(UpdateOperators.set("lumiumBalance", playerData.getLumiumBalance()));
+		updateOperators.add(UpdateOperators.set("votes", playerData.getVotes()));
+		updateOperators.add(UpdateOperators.set("playerKills", playerData.getPlayerKills()));
+		updateOperators.add(UpdateOperators.set("deaths", playerData.getDeaths()));
+		updateOperators.add(UpdateOperators.set("mobKills", playerData.getMobKills()));
+		updateOperators.add(UpdateOperators.set("blocksMined", playerData.getBlocksMined()));
+		updateOperators.add(UpdateOperators.set("secondsPlayed", playerData.getSecondsPlayed()));
+		updateOperators.add(UpdateOperators.set("homes", playerData.getHomes()));
+		updateOperators.add(UpdateOperators.set("kitCooldowns", playerData.getKitCooldowns()));
+		updateOperators.add(UpdateOperators.set("joinDate", playerData.getJoinDate()));
+
+
+		if(Objects.nonNull(query)) {
+			query.update(playerUpdate, updateOperators.toArray(new UpdateOperator[updateOperators.size()]));
+		} else {
+			initializePlayerData(player);
+		}
 	}
 
 	@NonNull
-	public void initializePlayerData(Player player, PlayerData playerData) {
+	public void initializePlayerData(Player player) {
 		if(!init) return;
-		playerDataCollection.insertOne(new DatabasePlayerData(player, playerData));
+		val query = datastore.find(PlayerData.class).filter(Filters.eq("uuid", player.getUniqueId().toString()));
+		if(Objects.isNull(query)) {
+			val chatFormat = loadChatFormats().get(0);
+			val data = new PlayerData(player.getUniqueId().toString(), player, chatFormat,
+					new Decimal128(0), 0D, 0, 0, 0, 0, 0, 0, new HashMap<>(), new HashMap<>(), Calendar.getInstance().getTime());
+			savePlayerData(player, data);
+		}
 	}
 
 	@NonNull
 	public String topPlayerByField(String field) {
-		return playerDataCollection.find().sort(eq(field, -1)).limit(1).first().getCurrentName();
+		return null;
 	}
 
 	@NonNull
 	public Optional<PlayerData> loadPlayerData(Player player) {
 		if(!init) return Optional.empty();
-		val playerDataCollection = db.getCollection("playerData");
-		val playerData = playerDataCollection.find(eq("uuid", player.getUniqueId().toString())).first();
-		if(Objects.isNull(playerData)) return Optional.empty();
-		Decimal128 balance = playerData.get("balance", Decimal128.class);
-		Double lumiumBalance = playerData.getDouble("lumiumBalance");
-		Integer votes = playerData.getInteger("votes");
-		Integer playerKills = playerData.getInteger("playerKills");
-		Integer deaths = playerData.getInteger("deaths");
-		Integer mobKills = playerData.getInteger("mobKills");
-		Integer blocksMined = playerData.getInteger("blocksMined");
-		Integer secondsPlayed = playerData.getInteger("secondsPlayed");
-		String chatColor = playerData.getString("chatColor");
-		String currentName = playerData.getString("currentName");
-		Map<String, Location> homes = playerData.get("homes", Map.class);
-		Map<String, Cooldown> kitCooldowns = playerData.get("kitCooldowns", Map.class);
-		Date joinDate = playerData.getDate("joinDate");
-		return Optional.of(new DatabasePlayerData(player, balance, lumiumBalance, votes, playerKills,
-				deaths, mobKills, blocksMined, secondsPlayed, chatColor, currentName, homes, kitCooldowns, joinDate));
+		val query = datastore.find("playerData", ChatFormat.class).first();
+		return Optional.empty();
 	}
 
 	private Bson byUUIDField(Player player) {

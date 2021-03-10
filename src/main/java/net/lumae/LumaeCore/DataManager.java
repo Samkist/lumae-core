@@ -40,8 +40,8 @@ public class DataManager {
 		return dbManager.loadPlayerData(player);
 	}
 
-	public void initializePlayerData(Player player, PlayerData playerData) {
-		dbManager.initializePlayerData(player,playerData);
+	public void initializePlayerData(Player player) {
+		dbManager.initializePlayerData(player);
 	}
 
 	public PlayerData fetchPlayerData(Player player) {

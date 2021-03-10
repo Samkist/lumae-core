@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.val;
 import net.lumae.LumaeCore.DataManager;
 import net.lumae.LumaeCore.Lumae;
-import net.lumae.LumaeCore.storage.DatabasePlayerData;
 import net.lumae.LumaeCore.storage.PlayerData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -30,15 +29,12 @@ public class PlayerDataListener implements Listener {
 
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
-		Player player = event.getPlayer();
+		val player = event.getPlayer();
 		Optional<PlayerData> playerData = dataManager.loadPlayerData(player);
-		if(playerData.isPresent()) {
-			playerDataMap.put(player.getUniqueId(), playerData.get());
-		} else {
-			val freshPlayerData = new DatabasePlayerData(player);
-			dataManager.initializePlayerData(player, freshPlayerData);
-			playerDataMap.put(player.getUniqueId(), freshPlayerData);
-		}
+		playerData.ifPresentOrElse(
+				data -> playerDataMap.put(player.getUniqueId(), data),
+				() -> dataManager.initializePlayerData(player)
+		);
 	}
 
 	@EventHandler
@@ -65,7 +61,7 @@ public class PlayerDataListener implements Listener {
 
 	@EventHandler
 	public void onMobKill(EntityDeathEvent event) {
-		if (event.getEntity() instanceof Player) {
+		if(event.getEntity() instanceof Player) {
 			return;
 		}
 
