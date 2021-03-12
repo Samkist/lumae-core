@@ -3,6 +3,7 @@ package net.lumae.LumaeCore;
 import lombok.Getter;
 import lombok.NonNull;
 import net.lumae.LumaeCore.storage.ChatFormat;
+import net.lumae.LumaeCore.storage.Message;
 import net.lumae.LumaeCore.storage.PlayerData;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -16,12 +17,14 @@ public class DataManager {
 	private final FileManager fileManager;
 	private final DBManager dbManager;
 	private final Map<UUID, PlayerData> playerDataMap;
+	private final Map<String, Message> pluginMessages;
 	private final List<ChatFormat> chatFormats;
 
 	public DataManager(FileManager fileManager, DBManager dbManager) {
 		this.fileManager = fileManager;
 		this.dbManager = dbManager;
 		this.playerDataMap = new HashMap<>();
+		this.pluginMessages = new HashMap<>();
 		this.chatFormats = loadChatFormats();
 	}
 
