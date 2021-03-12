@@ -5,14 +5,13 @@
 # |                          Controls how to connect to the server database.                     | #
 # |                                                                                              | #
 # +----------------------------------------------------------------------------------------------+ #
-lumae:
-  database:
-    user: ''
-    name: '' # NEEDS DB NAME
-    password: ''
-    host: ''
-    port: ''
-    connectionString: ''
+database:
+  user: ''
+  name: '' # NEEDS DB NAME
+  password: ''
+  host: ''
+  port: ''
+  connectionString: ''
   # +----------------------------------------------------------------------------------------------+ #
   # |                                                                                              | #
   # |                                      DATABASE DEFAULTS                                       | #
@@ -20,22 +19,18 @@ lumae:
   # |                   Default data to store upon connection to MongoDB                           | #
   # |                                                                                              | #
   # +----------------------------------------------------------------------------------------------+ #
-  defaults:
-    playerData:
-      collection: 'playerData'
-    chatFormats:
-      format:
-        name: 'default'
-        permission: 'lumae.chat.default'
-        messageFormat: '%luckperms_prefix% %player_displayname% &8»&7 %lumae_message%'
-        priority: 99999
-    joinLeaveFormats:
-      format:
-        name: 'default'
-        permission: 'lumae.joinleave.default'
-        joinFormat: '&e%player_name% has arrived!'
-        leaveFormat:  '&e%player_name% has departed!'
-    pluginMessages:
-      motd:
-        id: 'lumae-motd'
-        format: '&eWelcome back to Lumae &7%player_name%!'
+defaults:
+  chatFormats:
+    name: 'default'
+    permission: 'lumae.chat.default'
+    messageFormat: '%luckperms_prefix% %player_displayname% &8»&7 %lumae_message%'
+    priority: 99999
+  joinLeaveFormats:
+    name: 'default'
+    permission: 'lumae.joinleave.default'
+    joinFormat: '&e%player_name% &7has arrived!'
+    leaveFormat: '&e%player_name% &7has departed!'
+  pluginMessages:
+    motd:
+      id: 'lumae-motd'
+      format: '&eWelcome back to Lumae &7%player_name%!'

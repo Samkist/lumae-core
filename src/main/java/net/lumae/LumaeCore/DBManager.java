@@ -4,14 +4,14 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
-import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import dev.morphia.Datastore;
 import dev.morphia.Morphia;
+import dev.morphia.aggregation.experimental.stages.Group;
+import dev.morphia.aggregation.experimental.stages.Sort;
 import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperator;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -21,13 +21,10 @@ import net.lumae.LumaeCore.storage.Message;
 import net.lumae.LumaeCore.storage.PlayerData;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.conversions.Bson;
 import org.bson.types.Decimal128;
 import org.bukkit.entity.Player;
 
 import java.util.*;
-
-import static com.mongodb.client.model.Filters.eq;
 
 public class DBManager {
 
@@ -84,8 +81,9 @@ public class DBManager {
 	}
 
 	@NonNull
-	public Optional<BulkWriteResult> saveAllPlayers(Map<UUID, PlayerData> playerData) {
-		return Optional.empty();
+	public void saveAllPlayers(Map<UUID, PlayerData> playerData) {
+		datastore.withTransaction(s
+				-> s.save(new ArrayList<>(playerData.values())));
 	}
 
 	@NonNull
@@ -95,24 +93,9 @@ public class DBManager {
 
 		val query = datastore.find(PlayerData.class).filter(Filters.eq("uuid",player.getUniqueId().toString()));
 
-		ArrayList<UpdateOperator> updateOperators = new ArrayList<>();
-		val playerUpdate = UpdateOperators.set("player", player);
-		updateOperators.add(UpdateOperators.set("chatFormat", playerData.getChatFormat()));
-		updateOperators.add(UpdateOperators.set("balance", playerData.getBalance()));
-		updateOperators.add(UpdateOperators.set("lumiumBalance", playerData.getLumiumBalance()));
-		updateOperators.add(UpdateOperators.set("votes", playerData.getVotes()));
-		updateOperators.add(UpdateOperators.set("playerKills", playerData.getPlayerKills()));
-		updateOperators.add(UpdateOperators.set("deaths", playerData.getDeaths()));
-		updateOperators.add(UpdateOperators.set("mobKills", playerData.getMobKills()));
-		updateOperators.add(UpdateOperators.set("blocksMined", playerData.getBlocksMined()));
-		updateOperators.add(UpdateOperators.set("secondsPlayed", playerData.getSecondsPlayed()));
-		updateOperators.add(UpdateOperators.set("homes", playerData.getHomes()));
-		updateOperators.add(UpdateOperators.set("kitCooldowns", playerData.getKitCooldowns()));
-		updateOperators.add(UpdateOperators.set("joinDate", playerData.getJoinDate()));
-
 
 		if(Objects.nonNull(query)) {
-			query.update(playerUpdate, updateOperators.toArray(new UpdateOperator[updateOperators.size()]));
+			query.update(UpdateOperators.set(playerData)).execute();
 		} else {
 			initializePlayerData(player);
 		}
@@ -132,24 +115,23 @@ public class DBManager {
 
 	@NonNull
 	public String topPlayerByField(String field) {
-		return null;
+		if(!init) return "";
+		val aggregation = datastore.aggregate(PlayerData.class).group(Group.of(Group.id(field)).field(field)
+		).sort(Sort.on().ascending(field));
+		return aggregation.execute(Player.class).toList().get(0).getName();
 	}
 
 	@NonNull
 	public Optional<PlayerData> loadPlayerData(Player player) {
 		if(!init) return Optional.empty();
-		val query = datastore.find("playerData", ChatFormat.class).first();
-		return Optional.empty();
-	}
-
-	private Bson byUUIDField(Player player) {
-		return eq("uuid",  player.getUniqueId().toString());
+		val query = datastore.find(PlayerData.class).filter(Filters.eq("uuid", player.getUniqueId().toString())).first();
+		return Optional.ofNullable(query);
 	}
 
 	@NonNull
 	public void initializeChatFormats(ChatFormat chatFormats) {
 		if(!init) return;
-		val query = datastore.find("chatFormats", ChatFormat.class).first();
+		val query = datastore.find(ChatFormat.class).first();
 		if(Objects.isNull(query)) {
 			datastore.save(chatFormats);
 		}
@@ -157,20 +139,24 @@ public class DBManager {
 
 	public List<ChatFormat> loadChatFormats() {
 		if(!init) return new ArrayList<>();
-		val query = datastore.find("chatFormats", ChatFormat.class).first();
+		val query = datastore.find(ChatFormat.class).first();
 		if(Objects.nonNull(query)) {
 			return datastore.find(ChatFormat.class)
 					.iterator().toList();
 		} else {
-			initializeChatFormats(new ChatFormat("default", "lumae.chat.default",
-					"%luckperms_prefix% %player_displayname% &8»&7 %lumae_message%", 99999));
+			val config = plugin.getFileManager().getConfigYml();
+			val name = config.getString("defaults.chatFormats.name");
+			val permission = config.getString("defaults.chatFormats.permission");
+			val format = config.getString("default.chatFormats.messageFormat");
+			val priority = config.getInt("default.chatFormats.priority");
+			initializeChatFormats(new ChatFormat(name, permission, format, priority));
 			return loadChatFormats();
 		}
 	}
 
 	public void initializeMessages(List<Message> messages) {
 		if(!init) return;
-		val query = datastore.find("messages", Message.class).first();
+		val query = datastore.find(Message.class).first();
 		if(Objects.nonNull(query)) {
 			datastore.save(messages);
 		}
@@ -178,13 +164,15 @@ public class DBManager {
 
 	public List<Message> loadMessages() {
 		if(!init) return new ArrayList<>();
-		val query = datastore.find("messages", Message.class).first();
+		val query = datastore.find(Message.class).first();
 		if(Objects.nonNull(query)) {
 			return datastore.find(Message.class).iterator().toList();
 		} else {
-			//initialize message code then
-			//return loadMessages();
+			val config = plugin.getFileManager().getConfigYml();
+			val messages = new ArrayList<Message>();
+			messages.add(new Message(config.getString("defaults.pluginMessages.motd.id"), config.getString("defaults.pluginMessages.motd.format")));
+			initializeMessages(messages);
+			return loadMessages();
 		}
-		return new ArrayList<>();
 	}
 }

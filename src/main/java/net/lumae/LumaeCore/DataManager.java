@@ -1,17 +1,18 @@
 package net.lumae.LumaeCore;
 
-import com.mongodb.bulk.BulkWriteResult;
 import lombok.Getter;
 import lombok.NonNull;
 import net.lumae.LumaeCore.storage.ChatFormat;
 import net.lumae.LumaeCore.storage.PlayerData;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
 @Getter
 public class DataManager {
 
+	private static final Lumae plugin = JavaPlugin.getPlugin(Lumae.class);
 	private final FileManager fileManager;
 	private final DBManager dbManager;
 	private final Map<UUID, PlayerData> playerDataMap;
@@ -24,8 +25,8 @@ public class DataManager {
 		this.chatFormats = loadChatFormats();
 	}
 
-	public @NonNull Optional<BulkWriteResult> saveAllPlayers(Map<UUID, PlayerData> playerData) {
-		return dbManager.saveAllPlayers(playerData);
+	public @NonNull void saveAllPlayers(Map<UUID, PlayerData> playerData) {
+		dbManager.saveAllPlayers(playerData);
 	}
 
 	public void savePlayerData(Player player, PlayerData playerData) {

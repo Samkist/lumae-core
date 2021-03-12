@@ -59,15 +59,15 @@ public final class Lumae extends JavaPlugin {
 
 	private void configureDatabase() {
 		val configYml = fileManager.getConfigYml();
-		val connectionString = configYml.getString("lumae.database.connectionString");
-		val database = configYml.getString("lumae.database.name");
+		val connectionString = configYml.getString("database.connectionString");
+		val database = configYml.getString("database.name");
 		if(Objects.nonNull(connectionString)) {
 			dbManager = new DBManager(this, connectionString, database);
 		} else {
-			String user = configYml.getString("lumae.database.user");
-			String password = configYml.getString("lumae.database.password");
-			String host = configYml.getString("lumae.database.host");
-			Integer port = configYml.getInt("lumae.database.port");
+			String user = configYml.getString("database.user");
+			String password = configYml.getString("database.password");
+			String host = configYml.getString("database.host");
+			Integer port = configYml.getInt("database.port");
 
 			dbManager = new DBManager(this, MongoCredential.createCredential(user, database, password.toCharArray()), host, database, port);
 		}
