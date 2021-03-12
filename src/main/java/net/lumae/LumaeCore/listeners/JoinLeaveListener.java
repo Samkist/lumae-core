@@ -1,7 +1,9 @@
 package net.lumae.LumaeCore.listeners;
 
 import lombok.val;
+import net.lumae.LumaeCore.FileManager;
 import net.lumae.LumaeCore.Lumae;
+import net.lumae.LumaeCore.storage.Message;
 import net.lumae.LumaeCore.utils.ColorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -13,6 +15,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class JoinLeaveListener implements Listener {
 
 	private static final Lumae plugin = JavaPlugin.getPlugin(Lumae.class);
+	private final FileManager fileManager;
+	private final Message motd;
+
+	public JoinLeaveListener() {
+		this.fileManager = plugin.getFileManager();
+		this.motd = plugin.getDataManager().messageById("lumae-motd")
+				.orElse(new Message("lumae-motd",
+						fileManager.getConfigYml().getString("defaults.pluginMessages.motd.format")
+				));
+	}
 
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {

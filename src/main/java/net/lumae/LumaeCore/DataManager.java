@@ -2,6 +2,7 @@ package net.lumae.LumaeCore;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.val;
 import net.lumae.LumaeCore.storage.ChatFormat;
 import net.lumae.LumaeCore.storage.Message;
 import net.lumae.LumaeCore.storage.PlayerData;
@@ -19,13 +20,18 @@ public class DataManager {
 	private final Map<UUID, PlayerData> playerDataMap;
 	private final Map<String, Message> pluginMessages;
 	private final List<ChatFormat> chatFormats;
-
 	public DataManager(FileManager fileManager, DBManager dbManager) {
 		this.fileManager = fileManager;
 		this.dbManager = dbManager;
 		this.playerDataMap = new HashMap<>();
 		this.pluginMessages = new HashMap<>();
 		this.chatFormats = loadChatFormats();
+		initialize();
+	}
+
+	private void initialize() {
+		val msgs = dbManager.loadMessages();
+		msgs.forEach(m -> pluginMessages.put(m.getMessageId(), m));
 	}
 
 	public @NonNull void saveAllPlayers(Map<UUID, PlayerData> playerData) {
@@ -58,6 +64,10 @@ public class DataManager {
 
 	public List<ChatFormat> loadChatFormats() {
 		return dbManager.loadChatFormats();
+	}
+
+	public Optional<Message> messageById(String id) {
+		return Optional.ofNullable(pluginMessages.get(id));
 	}
 
 

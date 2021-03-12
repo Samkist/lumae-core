@@ -32,5 +32,4 @@ defaults:
     leaveFormat: '&e%player_name% &7has departed!'
   pluginMessages:
     motd:
-      id: 'lumae-motd'
       format: '&eWelcome back to Lumae &7%player_name%!'

@@ -18,11 +18,11 @@ import lombok.SneakyThrows;
 import lombok.val;
 import net.lumae.LumaeCore.storage.ChatFormat;
 import net.lumae.LumaeCore.storage.Message;
-import net.lumae.LumaeCore.storage.PlayerData;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.types.Decimal128;
 import org.bukkit.entity.Player;
+import net.lumae.LumaeCore.storage.PlayerData;
 
 import java.util.*;
 
@@ -91,7 +91,7 @@ public class DBManager {
 	public void savePlayerData(Player player, PlayerData playerData) {
 		if(!init) return;
 
-		val query = datastore.find(PlayerData.class).filter(Filters.eq("uuid",player.getUniqueId().toString()));
+		val query = datastore.find(PlayerData.class).filter(Filters.eq("uuid", player.getUniqueId().toString()));
 
 
 		if(Objects.nonNull(query)) {
@@ -107,8 +107,7 @@ public class DBManager {
 		val query = datastore.find(PlayerData.class).filter(Filters.eq("uuid", player.getUniqueId().toString()));
 		if(Objects.isNull(query)) {
 			val chatFormat = loadChatFormats().get(0);
-			val data = new PlayerData(player.getUniqueId().toString(), player, chatFormat,
-					new Decimal128(0), 0D, 0, 0, 0, 0, 0, 0, new HashMap<>(), new HashMap<>(), Calendar.getInstance().getTime());
+			val data = new PlayerData(player);
 			savePlayerData(player, data);
 		}
 	}
@@ -170,7 +169,7 @@ public class DBManager {
 		} else {
 			val config = plugin.getFileManager().getConfigYml();
 			val messages = new ArrayList<Message>();
-			messages.add(new Message(config.getString("defaults.pluginMessages.motd.id"), config.getString("defaults.pluginMessages.motd.format")));
+			messages.add(new Message("lumae-motd", config.getString("defaults.pluginMessages.motd.format")));
 			initializeMessages(messages);
 			return loadMessages();
 		}
