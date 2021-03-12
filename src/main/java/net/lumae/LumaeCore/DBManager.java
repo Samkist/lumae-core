@@ -17,12 +17,12 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import net.lumae.LumaeCore.storage.ChatFormat;
+import net.lumae.LumaeCore.storage.JoinLeaveFormat;
 import net.lumae.LumaeCore.storage.Message;
+import net.lumae.LumaeCore.storage.PlayerData;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.types.Decimal128;
 import org.bukkit.entity.Player;
-import net.lumae.LumaeCore.storage.PlayerData;
 
 import java.util.*;
 
@@ -116,7 +116,7 @@ public class DBManager {
 	public String topPlayerByField(String field) {
 		if(!init) return "";
 		val aggregation = datastore.aggregate(PlayerData.class).group(Group.of(Group.id(field)).field(field)
-		).sort(Sort.on().ascending(field));
+		).sort(Sort.on().descending(field));
 		return aggregation.execute(Player.class).toList().get(0).getName();
 	}
 
@@ -128,11 +128,11 @@ public class DBManager {
 	}
 
 	@NonNull
-	public void initializeChatFormats(ChatFormat chatFormats) {
+	public void initializeChatFormats(ChatFormat chatFormat) {
 		if(!init) return;
 		val query = datastore.find(ChatFormat.class).first();
 		if(Objects.isNull(query)) {
-			datastore.save(chatFormats);
+			datastore.save(chatFormat);
 		}
 	}
 
@@ -155,10 +155,7 @@ public class DBManager {
 
 	public void initializeMessages(List<Message> messages) {
 		if(!init) return;
-		val query = datastore.find(Message.class).first();
-		if(Objects.nonNull(query)) {
-			datastore.save(messages);
-		}
+		datastore.save(messages);
 	}
 
 	public List<Message> loadMessages() {
@@ -172,6 +169,28 @@ public class DBManager {
 			messages.add(new Message("lumae-motd", config.getString("defaults.pluginMessages.motd.format")));
 			initializeMessages(messages);
 			return loadMessages();
+		}
+	}
+
+	public void initalizeJoinLeaveFormats(JoinLeaveFormat format) {
+		if(!init) return;
+		datastore.save(format);
+	}
+
+	public List<JoinLeaveFormat> loadJoinLeaveFormats() {
+		if(!init) return new ArrayList<>();
+		val query = datastore.find(JoinLeaveFormat.class).first();
+		if(Objects.nonNull(query)) {
+			return datastore.find(JoinLeaveFormat.class).iterator().toList();
+		} else {
+			val config = plugin.getFileManager().getConfigYml();
+			val name = config.getString("defaults.joinLeaveFormats.name");
+			val permission = config.getString("defaults.joinLeaveFormats.permission");
+			val messageFormat = config.getString("defaults.joinLeaveFormats.messageFormat");
+			val priority = config.getInt("defaults.joinLeaveFormats.priority");
+			val format = new JoinLeaveFormat(name,permission,messageFormat,priority);
+			initalizeJoinLeaveFormats(format);
+			return loadJoinLeaveFormats();
 		}
 	}
 }

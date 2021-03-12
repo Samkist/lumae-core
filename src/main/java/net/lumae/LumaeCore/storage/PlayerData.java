@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.val;
 import net.lumae.LumaeCore.Lumae;
-import net.lumae.LumaeCore.listeners.JoinLeaveListener;
 import org.bson.types.Decimal128;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -30,6 +29,7 @@ public class PlayerData {
 	private Player player;
 	@Reference(lazy = true)
 	private ChatFormat chatFormat;
+	@Reference(lazy = true)
 	private JoinLeaveFormat joinLeaveFormat;
 	private Decimal128 balance;
 	private Double lumiumBalance;

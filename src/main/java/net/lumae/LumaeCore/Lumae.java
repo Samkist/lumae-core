@@ -18,7 +18,7 @@ public final class Lumae extends JavaPlugin {
 
 	private final FileManager fileManager = new FileManager(this);
 	public static final long LAST_START_TIME = System.currentTimeMillis();
-	public  static String CHAT_FORMAT_COLLECTION_NAME = "";
+	public static String CHAT_FORMAT_COLLECTION_NAME = "";
 	private DBManager dbManager;
 	private DataManager dataManager;
 

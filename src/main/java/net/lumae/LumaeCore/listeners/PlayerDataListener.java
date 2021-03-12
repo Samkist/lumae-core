@@ -40,7 +40,7 @@ public class PlayerDataListener implements Listener {
 	@EventHandler
 	public void onLeave(PlayerQuitEvent event) {
 		Player player = event.getPlayer();
-		val secondsToAdd = (int) (((System.currentTimeMillis() - Lumae.getLAST_START_TIME()) / 1000) % 300);
+		val secondsToAdd = (int) (((System.currentTimeMillis() - Lumae.LAST_START_TIME) / 1000) % 300);
 		val playerData = dataManager.fetchPlayerData(player);
 		playerData.setSecondsPlayed(playerData.getSecondsPlayed() + secondsToAdd);
 		dataManager.savePlayerData(player, playerDataMap.get(player.getUniqueId()));
