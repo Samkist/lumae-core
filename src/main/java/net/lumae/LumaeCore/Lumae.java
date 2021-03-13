@@ -1,24 +1,21 @@
 package net.lumae.LumaeCore;
 
 import com.mongodb.MongoCredential;
-import lombok.Getter;
-import lombok.val;
 import net.lumae.LumaeCore.listeners.ChatListener;
 import net.lumae.LumaeCore.listeners.JoinLeaveListener;
 import net.lumae.LumaeCore.listeners.PlayerDataListener;
 import net.lumae.LumaeCore.tasks.PlayerDataTask;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-@Getter
 public final class Lumae extends JavaPlugin {
 
 	private final FileManager fileManager = new FileManager(this);
 	public static final long LAST_START_TIME = System.currentTimeMillis();
-	public static String CHAT_FORMAT_COLLECTION_NAME = "";
 	private DBManager dbManager;
 	private DataManager dataManager;
 
@@ -36,14 +33,14 @@ public final class Lumae extends JavaPlugin {
 		/*
 		TASKS
 		 */
-		val playerDataTask = new PlayerDataTask();
-		val playerDataTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this, playerDataTask,6000L, 6000L);
+		final PlayerDataTask playerDataTask = new PlayerDataTask();
+		final int playerDataTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this, playerDataTask,6000L, 6000L);
 
-		val playerDataListener = new PlayerDataListener(this, dataManager.getPlayerDataMap(), dataManager);
+		final PlayerDataListener playerDataListener = new PlayerDataListener(this, dataManager.getPlayerDataMap(), dataManager);
 
-		val joinLeaveListener = new JoinLeaveListener();
+		final JoinLeaveListener joinLeaveListener = new JoinLeaveListener();
 
-		val chatListener = new ChatListener();
+		final ChatListener chatListener = new ChatListener();
 
 		Arrays.asList(playerDataListener, joinLeaveListener, chatListener)
 				.forEach(listener -> getServer().getPluginManager().registerEvents(listener, this));
@@ -57,9 +54,9 @@ public final class Lumae extends JavaPlugin {
 	}
 
 	private void configureDatabase() {
-		val configYml = fileManager.getConfigYml();
-		val connectionString = configYml.getString("database.connectionString");
-		val database = configYml.getString("database.name");
+		final FileConfiguration configYml = fileManager.getConfigYml();
+		final String connectionString = configYml.getString("database.connectionString");
+		final String database = configYml.getString("database.name");
 		if(Objects.nonNull(connectionString)) {
 			dbManager = new DBManager(this, connectionString, database);
 		} else {
@@ -72,5 +69,16 @@ public final class Lumae extends JavaPlugin {
 		}
 	}
 
+	public FileManager getFileManager() {
+		return fileManager;
+	}
+
+	public DBManager getDbManager() {
+		return this.dbManager;
+	}
+
+	public DataManager getDataManager() {
+		return this.dataManager;
+	}
 
 }

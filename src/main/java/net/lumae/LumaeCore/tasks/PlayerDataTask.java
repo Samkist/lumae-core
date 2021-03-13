@@ -1,12 +1,14 @@
 package net.lumae.LumaeCore.tasks;
 
-import lombok.extern.java.Log;
-import lombok.val;
 import net.lumae.LumaeCore.DataManager;
 import net.lumae.LumaeCore.Lumae;
+import net.lumae.LumaeCore.storage.PlayerData;
 import org.bukkit.plugin.java.JavaPlugin;
 
-@Log(topic="Lumae - PlayerDataSaveTask")
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
+
 public class PlayerDataTask implements Runnable {
 
 	private static final Lumae plugin = JavaPlugin.getPlugin(Lumae.class);
@@ -19,9 +21,9 @@ public class PlayerDataTask implements Runnable {
 	}
 
 	private void calculatePlayTime() {
-		val it = dataManager.getPlayerDataMap().entrySet().iterator();
+		final Iterator<Map.Entry<UUID, PlayerData>> it = dataManager.getPlayerDataMap().entrySet().iterator();
 		while(it.hasNext()) {
-			val playerData = it.next().getValue();
+			final PlayerData playerData = it.next().getValue();
 			playerData.setSecondsPlayed(playerData.getSecondsPlayed() + 300);
 		}
 	}
@@ -31,10 +33,10 @@ public class PlayerDataTask implements Runnable {
 		try {
 			dataManager.saveAllPlayers(dataManager.getPlayerDataMap());
 		} catch (Exception e) {
-			log.severe("Fatal error, unable to bulk write to database!");
+			plugin.getLogger().severe("Fatal error, unable to bulk write to database!");
 			e.printStackTrace();
 			return;
 		}
-		log.info("Player data was automatically saved.");
+		plugin.getLogger().info("Player data was automatically saved.");
 	}
 }

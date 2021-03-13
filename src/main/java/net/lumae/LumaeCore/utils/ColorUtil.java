@@ -1,14 +1,12 @@
 package net.lumae.LumaeCore.utils;
 
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
-import lombok.extern.java.Log;
 import net.lumae.LumaeCore.Lumae;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.plugin.java.JavaPlugin;
 
-@Log(topic = "Lumae ColorUtil")
 public class ColorUtil {
 	private static final Lumae plugin = JavaPlugin.getPlugin(Lumae.class);
 

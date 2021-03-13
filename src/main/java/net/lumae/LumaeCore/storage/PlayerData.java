@@ -3,9 +3,7 @@ package net.lumae.LumaeCore.storage;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import dev.morphia.annotations.Reference;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.val;
+import net.lumae.LumaeCore.DataManager;
 import net.lumae.LumaeCore.Lumae;
 import org.bson.types.Decimal128;
 import org.bukkit.Location;
@@ -17,8 +15,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-@Data
-@AllArgsConstructor
 @Entity(value = "playerData", useDiscriminator = false)
 public class PlayerData {
 
@@ -26,7 +22,6 @@ public class PlayerData {
 
 	@Id
 	private String uuid;
-	private Player player;
 	@Reference(lazy = true)
 	private ChatFormat chatFormat;
 	@Reference(lazy = true)
@@ -44,12 +39,12 @@ public class PlayerData {
 	private Date joinDate;
 
 	public PlayerData(Player player) {
-		val dataManager = plugin.getDataManager();
+		final DataManager dataManager = plugin.getDataManager();
 		this.uuid = player.getUniqueId().toString();
-		this.player = player;
 		this.chatFormat = dataManager.loadChatFormats().stream().filter(c ->
 				c.getName().equalsIgnoreCase("default")).findFirst().get();
-		this.joinLeaveFormat = null;
+		this.joinLeaveFormat = dataManager.loadJoinLeaveFormats().stream().filter(j ->
+				j.getName().equalsIgnoreCase("default")).findFirst().get();
 		this.balance = new Decimal128(0);
 		this.lumiumBalance = 0D;
 		this.votes = 0;
@@ -63,4 +58,143 @@ public class PlayerData {
 		this.joinDate = Calendar.getInstance().getTime();
 	}
 
+	//DUMMY CONSTRUCTOR
+	public PlayerData() {
+
+	}
+
+	public PlayerData(String uuid, ChatFormat chatFormat, JoinLeaveFormat joinLeaveFormat, Decimal128 balance, Double lumiumBalance, Integer votes,
+					  Integer playerKills, Integer deaths, Integer mobKills, Integer blocksMined, Integer secondsPlayed, Map<String, Location> homes,
+					  Map<String, Cooldown> kitCooldowns, Date joinDate) {
+		this.uuid = uuid;
+		this.chatFormat = chatFormat;
+		this.joinLeaveFormat = joinLeaveFormat;
+		this.balance = balance;
+		this.lumiumBalance = lumiumBalance;
+		this.votes = votes;
+		this.playerKills = playerKills;
+		this.deaths = deaths;
+		this.mobKills = mobKills;
+		this.blocksMined = blocksMined;
+		this.secondsPlayed = secondsPlayed;
+		this.homes = homes;
+		this.kitCooldowns = kitCooldowns;
+		this.joinDate = joinDate;
+	}
+
+	public static Lumae getPlugin() {
+		return plugin;
+	}
+
+	public String getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	public ChatFormat getChatFormat() {
+		return chatFormat;
+	}
+
+	public void setChatFormat(ChatFormat chatFormat) {
+		this.chatFormat = chatFormat;
+	}
+
+	public JoinLeaveFormat getJoinLeaveFormat() {
+		return joinLeaveFormat;
+	}
+
+	public void setJoinLeaveFormat(JoinLeaveFormat joinLeaveFormat) {
+		this.joinLeaveFormat = joinLeaveFormat;
+	}
+
+	public Decimal128 getBalance() {
+		return balance;
+	}
+
+	public void setBalance(Decimal128 balance) {
+		this.balance = balance;
+	}
+
+	public Double getLumiumBalance() {
+		return lumiumBalance;
+	}
+
+	public void setLumiumBalance(Double lumiumBalance) {
+		this.lumiumBalance = lumiumBalance;
+	}
+
+	public Integer getVotes() {
+		return votes;
+	}
+
+	public void setVotes(Integer votes) {
+		this.votes = votes;
+	}
+
+	public Integer getPlayerKills() {
+		return playerKills;
+	}
+
+	public void setPlayerKills(Integer playerKills) {
+		this.playerKills = playerKills;
+	}
+
+	public Integer getDeaths() {
+		return deaths;
+	}
+
+	public void setDeaths(Integer deaths) {
+		this.deaths = deaths;
+	}
+
+	public Integer getMobKills() {
+		return mobKills;
+	}
+
+	public void setMobKills(Integer mobKills) {
+		this.mobKills = mobKills;
+	}
+
+	public Integer getBlocksMined() {
+		return blocksMined;
+	}
+
+	public void setBlocksMined(Integer blocksMined) {
+		this.blocksMined = blocksMined;
+	}
+
+	public Integer getSecondsPlayed() {
+		return secondsPlayed;
+	}
+
+	public void setSecondsPlayed(Integer secondsPlayed) {
+		this.secondsPlayed = secondsPlayed;
+	}
+
+	public Map<String, Location> getHomes() {
+		return homes;
+	}
+
+	public void setHomes(Map<String, Location> homes) {
+		this.homes = homes;
+	}
+
+	public Map<String, Cooldown> getKitCooldowns() {
+		return kitCooldowns;
+	}
+
+	public void setKitCooldowns(Map<String, Cooldown> kitCooldowns) {
+		this.kitCooldowns = kitCooldowns;
+	}
+
+	public Date getJoinDate() {
+		return joinDate;
+	}
+
+	public void setJoinDate(Date joinDate) {
+		this.joinDate = joinDate;
+	}
 }

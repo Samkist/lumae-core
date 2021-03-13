@@ -20,13 +20,11 @@ database:
   # |                                                                                              | #
   # +----------------------------------------------------------------------------------------------+ #
 defaults:
-  chatFormats:
-    name: 'default'
+  chatFormats: #NAME/ID WILL BE DEFAULT
     permission: 'lumae.chat.default'
     messageFormat: '%luckperms_prefix% %player_displayname% &8»&7 %lumae_message%'
     priority: 99999
-  joinLeaveFormats:
-    name: 'default'
+  joinLeaveFormats: #NAME/ID WILL BE DEFAULT
     permission: 'lumae.joinleave.default'
     joinFormat: '&e%player_name% &7has arrived!'
     leaveFormat: '&e%player_name% &7has departed!'

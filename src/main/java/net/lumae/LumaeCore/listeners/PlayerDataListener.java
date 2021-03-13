@@ -1,7 +1,5 @@
 package net.lumae.LumaeCore.listeners;
 
-import lombok.AllArgsConstructor;
-import lombok.val;
 import net.lumae.LumaeCore.DataManager;
 import net.lumae.LumaeCore.Lumae;
 import net.lumae.LumaeCore.storage.PlayerData;
@@ -19,29 +17,31 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-@AllArgsConstructor
 public class PlayerDataListener implements Listener {
 
 	private final Lumae plugin;
 	private final Map<UUID, PlayerData> playerDataMap;
 	private final DataManager dataManager;
 
+	public PlayerDataListener(Lumae plugin, Map<UUID, PlayerData> playerDataMap, DataManager dataManager) {
+		this.plugin = plugin;
+		this.playerDataMap = playerDataMap;
+		this.dataManager = dataManager;
+	}
+
 
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
-		val player = event.getPlayer();
+		final Player player = event.getPlayer();
 		Optional<PlayerData> playerData = dataManager.loadPlayerData(player);
-		playerData.ifPresentOrElse(
-				data -> playerDataMap.put(player.getUniqueId(), data),
-				() -> dataManager.initializePlayerData(player)
-		);
+		playerDataMap.put(player.getUniqueId(), playerData.get());
 	}
 
 	@EventHandler
 	public void onLeave(PlayerQuitEvent event) {
-		Player player = event.getPlayer();
-		val secondsToAdd = (int) (((System.currentTimeMillis() - Lumae.LAST_START_TIME) / 1000) % 300);
-		val playerData = dataManager.fetchPlayerData(player);
+		final Player player = event.getPlayer();
+		final int secondsToAdd = (int) (((System.currentTimeMillis() - Lumae.LAST_START_TIME) / 1000) % 300);
+		final PlayerData playerData = dataManager.fetchPlayerData(player);
 		playerData.setSecondsPlayed(playerData.getSecondsPlayed() + secondsToAdd);
 		dataManager.savePlayerData(player, playerDataMap.get(player.getUniqueId()));
 		playerDataMap.remove(player.getUniqueId());
@@ -49,12 +49,12 @@ public class PlayerDataListener implements Listener {
 
 	@EventHandler
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		val victimData = playerDataMap.get(event.getEntity().getUniqueId());
+		final PlayerData victimData = playerDataMap.get(event.getEntity().getUniqueId());
 		victimData.setDeaths(victimData.getDeaths() + 1);
 
-		val killer = event.getEntity().getKiller();
+		final Player killer = event.getEntity().getKiller();
 		if(Objects.nonNull(killer)) {
-			val killerData = dataManager.fetchPlayerData(killer);
+			final PlayerData killerData = dataManager.fetchPlayerData(killer);
 			killerData.setPlayerKills(killerData.getPlayerKills() + 1);
 		}
 	}
@@ -65,19 +65,19 @@ public class PlayerDataListener implements Listener {
 			return;
 		}
 
-		val player = event.getEntity().getKiller();
+		final Player player = event.getEntity().getKiller();
 		if(Objects.nonNull(player)) {
-			val playerData = dataManager.fetchPlayerData(player);
+			final PlayerData playerData = dataManager.fetchPlayerData(player);
 			playerData.setMobKills(playerData.getMobKills() + 1);
 		}
 	}
 
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent event) {
-		val player = event.getPlayer();
+		final Player player = event.getPlayer();
 
 		if(Objects.nonNull(player)) {
-			val playerData = dataManager.fetchPlayerData(player);
+			final PlayerData playerData = dataManager.fetchPlayerData(player);
 			playerData.setBlocksMined(playerData.getBlocksMined() + 1);
 		}
 	}
