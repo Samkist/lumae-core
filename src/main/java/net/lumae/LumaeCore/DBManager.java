@@ -111,7 +111,9 @@ public class DBManager {
 
 	public Optional<PlayerData> loadPlayerData(Player player) {
 		if(!init) return Optional.empty();
-		final PlayerData result = datastore.find(PlayerData.class).filter(Filters.eq("uuid", player.getUniqueId().toString())).first();
+		final PlayerData result = datastore.find("playerData", PlayerData.class)
+				.filter(Filters.eq("uuid", player.getUniqueId().toString()))
+				.first();
 		if(Objects.isNull(result)) {
 			initializePlayerData(player);
 			loadPlayerData(player);

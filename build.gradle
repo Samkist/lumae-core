@@ -3,7 +3,7 @@ plugins {
 }
 
 apply plugin: 'java'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 
 group = 'net.lumae'
@@ -21,7 +21,7 @@ tasks.withType(JavaCompile) {
 repositories {
     mavenCentral()
     maven {
-        url 'https://papermc.io/repo/repository/maven-public/'
+        url = 'https://papermc.io/repo/repository/maven-public/'
     }
     maven {
         name = 'sonatype'
@@ -53,5 +53,7 @@ shadowJar {
     relocate("dev.morphia", "net.lumae.morphia")
     relocate("com.iridium", "net.lumae.iridium")
     relocate("com.mongodb", "net.lumae.mongodb")
+    relocate("net.bytebuddy", "net.lumae.bytebuddy")
+    relocate("org.bson", "net.lumae.bson")
     baseName "LumaeLib"
 }

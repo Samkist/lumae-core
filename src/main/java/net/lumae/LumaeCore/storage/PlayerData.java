@@ -3,6 +3,7 @@ package net.lumae.LumaeCore.storage;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import dev.morphia.annotations.Reference;
+import dev.morphia.mapping.codec.references.MorphiaProxy;
 import net.lumae.LumaeCore.DataManager;
 import net.lumae.LumaeCore.Lumae;
 import org.bson.types.Decimal128;
@@ -22,6 +23,7 @@ public class PlayerData {
 
 	@Id
 	private String uuid;
+	private String lastUsername;
 	@Reference(lazy = true)
 	private ChatFormat chatFormat;
 	@Reference(lazy = true)
@@ -39,8 +41,10 @@ public class PlayerData {
 	private Date joinDate;
 
 	public PlayerData(Player player) {
+		MorphiaProxy.class.getName();
 		final DataManager dataManager = plugin.getDataManager();
 		this.uuid = player.getUniqueId().toString();
+		this.lastUsername = player.getName();
 		this.chatFormat = dataManager.loadChatFormats().stream().filter(c ->
 				c.getName().equalsIgnoreCase("default")).findFirst().get();
 		this.joinLeaveFormat = dataManager.loadJoinLeaveFormats().stream().filter(j ->
